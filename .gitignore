@@ -1,0 +1,9 @@
+# Byte-compiled / optimized files
+__pycache__/
+
+# Distribution / packaging
+/build/
+/dist/
+/[bs]dist/
+/*.egg-info/
+*.egg
