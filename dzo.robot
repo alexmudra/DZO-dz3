@@ -8,8 +8,7 @@ Library  Collections
 
 *** Variables ***
 ${decisionID}  Some_DecisionID_#93498494
-${locator.assetId}  xpath=//td[contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
-${locators.asset}  xpath=//div[@class="item l relative active mi_assets"]
+${locator.assetId}  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
 
 *** Keywords ***
 Підготувати дані для оголошення тендера
@@ -59,15 +58,23 @@ Login
   Wait Until Page Contains Element  xpath=//div[@class="lname"]
 
 
-
 Пошук об’єкта МП по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
   Go To  ${USERS.users['${username}'].homepage}
-  Click Element  ${locators.asset}
+  Click Element  //span[contains(text(),"ОБ'ЄКТИ")]
   Select From List By Value  name=filter[object]  assetID
   Input Text  name=filter[search]  ${tender_uaid}
   Click Element  xpath=//button[contains(@class, "not_toExtend")]
   Wait Until Page Contains Element  xpath=//span[@class="cdValue"][contains(text(),"${tender_uaid}")]
+  Click Element  xpath=//*[contains('${tender_uaid}',text()) and contains(text(), '${tender_uaid}')]/ancestor::div[@class="item relative"]/descendant::a[@class="reverse tenderLink"]
+  Wait Until Page Does Not Contain Element   xpath=//form[@name="filter"]
+  ${tender_uaid}=  Get Text  ${locator.assetId}
+  [Return]  ${tender_uaid}
+
+
+Оновити сторінку з об'єктом МП
+  [Arguments]  ${username}  ${tender_uaid}
+  dzo.Пошук об’єкта МП по ідентифікатору  ${username}  ${tender_uaid}
 
 
 Отримати кількість активів в об'єкті МП
@@ -80,6 +87,7 @@ Login
 
 Створити об'єкт МП
   [Arguments]  ${username}  ${tender_data}
+
   ${decisions}=   Get From Dictionary   ${tender_data.data}   decisions
   ${items}=   Get From Dictionary   ${tender_data.data}   items
   ${number_of_items}=  Get Length  ${items}
@@ -102,10 +110,7 @@ Login
   Input Text  name=data[decisions][0][decisionID]  ${decisionID}}
   Input Text  xpath=//input[@name="data[description]"]  ${tender_data.data.description}
   Click Element  xpath=//section[@id="multiItems"]
-
-
   #Додати предмет МП (item) & код CPV
-
   :FOR  ${index}  IN RANGE  ${number_of_items}
   \  Run Keyword If  ${index} != 0  Click Element  xpath=//section[@id="multiItems"]/descendant::a[@class="addMultiItem"]
   \  Додати предмет МП  ${items[${index}]}
@@ -120,7 +125,6 @@ Login
 
 
 Додати предмет МП
-
   [Arguments]  ${item}
   ${unit_name}=   convert_string_from_dict_dzo   ${item.unit.name}
   ${quantity}=  Convert To String  ${item.quantity}
@@ -128,7 +132,6 @@ Login
   ${index}=   Get Element Attribute   xpath=(//div[@class="tenderItemElement tenderItemPositionElement"])[last()]@data-multiline
   Input Text   name=data[items][${index}][description]   ${item.description}
   Input Text   name=data[items][${index}][quantity]   ${quantity}
-  #Focus   name=data[items][${index}][quantity]
   Click Element   xpath=//input[@name='data[items][${index}][cav_id]']/preceding-sibling::a
   Select Frame   xpath=//iframe[contains(@src,'/js/classifications/universal/index.htm?lang=uk&shema=SP&relation=true')]
   Run Keyword If   '000000' not in '${item.classification.id}'   Input Text   id=search   ${item.classification.description}
@@ -143,3 +146,17 @@ Login
   Input Text   name=data[items][${index}][address][streetAddress]   ${item.address.streetAddress}
   Input Text  name=data[items][${index}][address][postalCode]   ${item.address.postalCode}
   Select From List By Value   name=data[items][${index}][registrationDetails][status]  ${item.registrationDetails.status}
+
+
+Додати актив до об'єкта МП
+  [Arguments]  ${username}  ${tender_uaid}  ${item}
+  dzo.Пошук об’єкта МП по ідентифікатору  ${username}  ${tender_uaid}
+  Wait Until Page Contains  xpath=//a[contains(text(),"Редагувати")]
+  Click Element  xpath=//a[contains(text(),"Редагувати")]
+  Wait Until Element Is Visible  xpath=//h3[@class="title bigTitle"][contains(text(),"Рішення про затвердження переліку об’єктів, або про включення нового об’єкта до переліку")]
+  Click Element  xpath=//section[@id="multiItems"]/a
+  Click Element  xpath=//section[@id="multiItems"]/descendant::a[@class="addMultiItem"]
+  Додати предмет МП  ${item}
+  Click Element  xpath=//button[@value="save"]
+  Wait Until Element Is Visible  xpath=//td[contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
+
