@@ -20,13 +20,22 @@ ${locator.assetId}  xpath=//td[@class="nameField"][contains(text(),"Іденти
 
 Підготувати клієнт для користувача
   [Arguments]  ${username}
-  Set Global Variable   ${DZO_MODIFICATION_DATE}   ${EMPTY}
-  Set Suite Variable  ${my_alias}  ${username + 'CUSTOM'}
-  Run Keyword If   "${USERS.users['${username}'].browser}" == "Firefox"   Створити драйвер для Firefox   ${username}
-  ...   ELSE   Open Browser   ${USERS.users['${username}'].homepage}   ${USERS.users['${username}'].browser}   alias=${my_alias}
-  Set Window Size   @{USERS.users['${username}'].size}
-  Set Window Position   @{USERS.users['${username}'].position}
-  Run Keyword If   'Viewer' not in '${username}'   Login   ${username}
+#  #Set Global Variable   ${DZO_MODIFICATION_DATE}   ${EMPTY}
+#  Set Suite Variable  ${my_alias}  ${username + 'CUSTOM'}
+#  Run Keyword If   "${USERS.users['${username}'].browser}" == "Firefox"   Створити драйвер для Firefox   ${username}
+#  ...   ELSE   Open Browser   ${USERS.users['${username}'].homepage}   ${USERS.users['${username}'].browser}   alias=${my_alias}
+#  Set Window Size   @{USERS.users['${username}'].size}
+#  Set Window Position   @{USERS.users['${username}'].position}
+#  Run Keyword If   'Viewer' not in '${username}'   Login   ${username}
+    ${chrome_options}=    Evaluate    sys.modules['selenium.webdriver'].ChromeOptions()    sys
+    Run Keyword If  '${USERS.users['${username}'].browser}' in 'Chrome chrome'  Run Keywords
+    ...  Call Method  ${chrome_options}  add_argument  --headless
+    ...  AND  Create Webdriver  Chrome  alias=my_alias  chrome_options=${chrome_options}
+    ...  AND  Go To  ${USERS.users['${username}'].homepage}
+    ...  ELSE  Open Browser  ${USERS.users['${username}'].homepage}  ${USERS.users['${username}'].browser}  alias=my_alias
+    Set Window Size  ${USERS.users['${username}'].size[0]}  ${USERS.users['${username}'].size[1]}
+    Run Keyword If  'Viewer' not in '${username}'  Login  ${username}
+
   
 Створити драйвер для Firefox
   [Arguments]  ${username}
@@ -159,4 +168,34 @@ Login
   Додати предмет МП  ${item}
   Click Element  xpath=//button[@value="save"]
   Wait Until Element Is Visible  xpath=//td[contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
+
+#Отримати інформацію із об'єкта МП
+#  [Arguments]  ${username}  ${tender_uaid}  ${field}
+#
+#  ${value}=  Run Keyword If  'decisions' in '${field}'  Отримати інформацію про decisions  ${field}
+#  ...  ELSE  dzo.Отримати інформацію про ${field}
+#  [Return]  ${value}
+
+
+
+#Отримати інформацію із об'єкта МП
+#######      МІЙ КОД      #######
+Отримати інформацію із об'єкта МП
+  [Arguments]  ${username}  ${tender_uaid}  ${field}
+  ${value}=  run keyword if  '${field}' == 'assetID'  Get Text  xpath=//td[contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
+  ...  ELSE IF  'assetCustodian.identifier.legalName' in '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[1]/following-sibling::td[1]/a/span
+  ...  ELSE IF  'date' == '${field}'  Get Element Attribute  xpath=//*[@data-test-date]@data-test-date
+  ...  ELSE IF  'rectificationPeriod.endDate' in '${field}'  Get Element Attribute  xpath=//*[@data-test-rectificationperiod-enddate]@data-test-rectificationperiod-enddate
+  ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(text(),"Опубліковано. Очікування інформаційного повідомлення")]
+  ...  ELSE IF
+
+  ${value}=  adapt_asset_data  ${field}  ${value}
+
+  [Return]  ${value}
+
+
+
+
+
+
 

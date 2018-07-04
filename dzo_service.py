@@ -50,3 +50,18 @@ def adapt_data_for_role(role_name, tender_data):
 def convert_string_from_dict_dzo(string):
     return DZO_dict.get(string, string)
 
+
+def adapt_asset_data(field, value):
+    # if 'date' in field:
+    #     value = convert_date(value)
+    # elif 'decisionDate' in field:
+    #     value = convert_date_from_decision(value.split(' ')[0])
+    # elif 'documentType' in field:
+    #     value = adapted_dictionary(value.split(' ')[0])
+    # elif 'rectificationPeriod.endDate' in field:
+    #     value = convert_date(value)
+    # elif 'documentType' in field:
+    #     value = value
+    value = DZO_dict.get(value, value)
+    return value
+
