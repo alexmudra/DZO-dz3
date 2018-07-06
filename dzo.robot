@@ -7,7 +7,6 @@ Library  dzo_service.py
 Library  Collections
 
 *** Variables ***
-${decisionID}  Some_DecisionID_#93498494
 ${locator.assetId}  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
 
 *** Keywords ***
@@ -116,7 +115,7 @@ Login
   Execute Javascript  $("input[name|='data[decisions][0][decisionDate]']").removeAttr('readonly'); $("input[name|='data[decisions][0][decisionDate]']").unbind();
   Input Text  xpath=//input[@name="data[decisions][0][decisionDate]"]  ${decisionDate}
   Input Text  xpath=//input[@name="data[title]"]  ${tender_data.data.title}
-  Input Text  name=data[decisions][0][decisionID]  ${decisionID}}
+  Input Text  name=data[decisions][0][decisionID]  ${decisions[0].decisionID}
   Input Text  xpath=//input[@name="data[description]"]  ${tender_data.data.description}
   Click Element  xpath=//section[@id="multiItems"]
   #Додати предмет МП (item) & код CPV
@@ -198,9 +197,8 @@ Login
   ...  ELSE IF  'rectificationPeriod.endDate' in '${field}'  Get Element Attribute  xpath=//*[@data-test-rectificationperiod-enddate]@data-test-rectificationperiod-enddate
   ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(text(),"Опубліковано. Очікування інформаційного повідомлення")]
   ...  ELSE IF  'title' == '${field}'  Get Text  xpath=//div/h1
-  ...  ELSE IF  'decisions[0].title' == '${field}'  Отримати інформацію про decisions  ${field}
+  ...  ELSE IF  'decision' in '${field}'  Отримати інформацію про decisions  ${field}
   ...  ELSE IF  'description' == '${field}'  Get Text  xpath=//h2[@class="tenderDescr"]
-
 
   ${value}=  adapt_asset_data  ${field}  ${value}
 
