@@ -65,3 +65,4 @@ def adapt_asset_data(field, value):
     value = DZO_dict.get(value, value)
     return value
 
+
