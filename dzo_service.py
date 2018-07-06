@@ -65,4 +65,13 @@ def adapt_asset_data(field, value):
     value = DZO_dict.get(value, value)
     return value
 
+def convert_date_from_asset(date):
+    date = datetime.strptime(date.replace('.18', '.2018'), "%d.%m.%Y")
+    return timezone('Europe/Kiev').localize(date).strftime('%Y-%m-%dT%H:%M:%S.%f%z')
+
+
+def convert_decision_data(data, field):
+    if 'Date' in field:
+        data = convert_date_from_asset(data)
+    return data
 

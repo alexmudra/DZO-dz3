@@ -176,10 +176,20 @@ Login
 #  ...  ELSE  dzo.Отримати інформацію про ${field}
 #  [Return]  ${value}
 
+Отримати інформацію про decisions
+  [Arguments]  ${field}
+  ${index}=  Set Variable  ${field.split('[')[1].split(']')[0]}
+  ${index}=  Convert To Integer  ${index}
+  ${value}=  Run Keyword If  'title' in '${field}'  Get Text  xpath=//h3[@class="title"][contains(text(), "Найменування рішення про приватизацію об'єкту")]/../descendant::td[@class="itemNum"]/span[contains(text(), "${index + 1}")]/../following-sibling::td/div[1]
+  ...  ELSE IF  'decisionDate' in '${field}'  Get Text  //h3[@class="title"][contains(text(), "Найменування рішення про приватизацію об'єкту")]/../descendant::td[@class="itemNum"]/span[contains(text(), "${index + 1}")]/../following-sibling::td/div[2]/span[3]
+  ...  ELSE IF  'decisionID' in '${field}'  Get Text  //h3[@class="title"][contains(text(), "Найменування рішення про приватизацію об'єкту")]/../descendant::td[@class="itemNum"]/span[contains(text(), "${index + 1}")]/../following-sibling::td/div[2]/span[1]
+  ${value}=  convert_decision_data  ${value}  ${field}
+  [Return]  ${value}
 
 
 #Отримати інформацію із об'єкта МП
 #######      МІЙ КОД      #######
+
 Отримати інформацію із об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${field}
   ${value}=  run keyword if  '${field}' == 'assetID'  Get Text  xpath=//td[contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
@@ -187,7 +197,10 @@ Login
   ...  ELSE IF  'date' == '${field}'  Get Element Attribute  xpath=//*[@data-test-date]@data-test-date
   ...  ELSE IF  'rectificationPeriod.endDate' in '${field}'  Get Element Attribute  xpath=//*[@data-test-rectificationperiod-enddate]@data-test-rectificationperiod-enddate
   ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(text(),"Опубліковано. Очікування інформаційного повідомлення")]
-  ...  ELSE IF
+  ...  ELSE IF  'title' == '${field}'  Get Text  xpath=//div/h1
+  ...  ELSE IF  'decisions[0].title' == '${field}'  Отримати інформацію про decisions  ${field}
+  ...  ELSE IF  'description' == '${field}'  Get Text  xpath=//h2[@class="tenderDescr"]
+
 
   ${value}=  adapt_asset_data  ${field}  ${value}
 
