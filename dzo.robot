@@ -199,11 +199,60 @@ Login
   ...  ELSE IF  'title' == '${field}'  Get Text  xpath=//div/h1
   ...  ELSE IF  'decision' in '${field}'  Отримати інформацію про decisions  ${field}
   ...  ELSE IF  'description' == '${field}'  Get Text  xpath=//h2[@class="tenderDescr"]
+  ...  ELSE IF  'assetHolder.name' == '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[2]/following-sibling::td[1]
+  ...  ELSE IF  'assetHolder.identifier.scheme' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[2]/following-sibling::td/span[1]
+  ...  ELSE IF  'assetHolder.identifier.id' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[2]/following-sibling::td/span[2]
+  ...  ELSE IF  'assetCustodian.identifier.scheme' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[1]/following-sibling::td/span[1]
+  ...  ELSE IF  'assetCustodian.identifier.id' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[1]/following-sibling::td/span[2]
+  ...  ELSE IF  'assetCustodian.identifier.legalName' == '${field}'  Get Text  xpath=(//td[contains(text(), "Юридична адреса")])[1]/following-sibling::td[1]
+  ...  ELSE IF  'assetCustodian.contactPoint.name' == '${field}'  Get Text  xpath=(//td[contains(text(), "Ім'я")])[1]/following-sibling::td[1]
+  ...  ELSE IF  'assetCustodian.contactPoint.telephone' == '${field}'  Get Text  xpath=(//td[contains(text(), "Телефон")])[1]/following-sibling::td[1]
+  ...  ELSE IF  'assetCustodian.contactPoint.email' == '${field}'  Get Text  xpath=(//td[contains(text(),"E-mail")])[1]/following-sibling::td[1]
+  ...  ELSE IF  'documents[0].documentType' == '${field}'  Get Text  xpath=//a[contains(@href, "info/ss")]/following-sibling::div/span
+  ...  ELSE IF  'description' == '${field}'  Get Text  xpath=//h2[@class="tenderDescr"]
+  ...  ELSE IF  'classification.scheme' == '${field}'  Get Text  xpath=//
+  ...  ELSE IF  'classification.id' == '${field}'  Get Text  xpath=//
+  ...  ELSE IF  'unit.name' == '${field}'  Get Text  xpath=//
+  ...  ELSE IF  'quantity' == '${field}'  Get Text  xpath=//
+  ...  ELSE IF  'registrationDetails.status' == '${field}'  Get Text  xpath=//
+
+
+
+
+#Отримати інформацію про assetHolder.name
+#  ${name}=   Отримати текст із поля і показати на сторінці   assetHolder.name
+#  [Return]  ${name}
+#
+#Отримати текст із поля і показати на сторінці
+#  [Arguments]   ${fieldname}
+#  sleep  1
+#  Scroll To Element  ${locator.${fieldname}}
+#  ${return_value}=  Get Text  ${locator.${fieldname}}
+#  [Return]  ${return_value}
+#
+#Scroll To Element
+#  [Arguments]  ${locator}
+#  ${elem_vert_pos}=  Get Vertical Position  ${locator}
+##  Execute Javascript  window.scrollTo(0,${elem_vert_pos - 200});
+
 
   ${value}=  adapt_asset_data  ${field}  ${value}
 
   [Return]  ${value}
 
+
+
+#Відображення назви організації балансоутримувача об'єкта МП
+#  [Tags]   ${USERS.users['${viewer}'].broker}: Відображення основних даних об'єкта МП
+#  ...      viewer  tender_owner
+#  ...      ${USERS.users['${viewer}'].broker}  ${USERS.users['${tender_owner}'].broker}
+#  ...      asset_view
+#  Звірити відображення поля assetHolder.name тендера для усіх користувачів
+
+#Отримати інформацію про documents[0].documentType
+#  ${type}=   Get Text  xpath=//a[contains(@href, "info/ss")]/following-sibling::div/span
+#  ${type}=  convert_string_from_dict_dzo  ${type}
+#  [return]  ${type}
 
 
 

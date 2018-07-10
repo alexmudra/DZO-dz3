@@ -1,5 +1,5 @@
 # !/usr/bin/python
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 from iso8601 import parse_date
 from pytz import timezone
@@ -33,7 +33,12 @@ DZO_dict = {u'килограммы': u'кг', u'кілограм': u'кг', u'к
             u'ТИП АУКЦІОНУ: АУКЦІОН ЗА МЕТОДОМ ПОКРОКОВОГО ЗНИЖЕННЯ СТАРТОВОЇ ЦІНИ ТА ПОДАЛЬШОГО ПОДАННЯ ЦІНОВИХ ПРОПОЗИЦІЙ': u'sellout.insider',
             u'СТАТУС АУКЦІОНУ: ЗАПЛАНОВАНО.': u'scheduled',
             u'СТАТУС АУКЦІОНУ: В ПРОЦЕСІ.': u'active',
-            u'Інформація про оприлюднення інформаційного повідомлення': u'informationDetails'}
+            u'Інформація про оприлюднення інформаційного повідомлення': u'informationDetails',
+            u'assetCustodian.identifier.id': u'21351323',
+            u'assetCustodian.identifier.legalName': u'O. Privatizacii 3 (Ur. Osoba)',
+            u'assetCustodian.contactPoint.name': u'ОргПриватизТри ОргПривТри ОргПривТри',
+            u'assetCustodian.contactPoint.telephone': u'+380325131356',
+            u'assetCustodian.contactPoint.email': u'ustudiotestin.g@gmail.com'}
 
 
 def convert_date_for_decision(date):
@@ -75,3 +80,27 @@ def convert_decision_data(data, field):
         data = convert_date_from_asset(data)
     return data
 
+########################## adapt data ##############################################################################
+
+def adapt_data_for_role(role_name, tender_data):
+    if role_name == 'tender_owner' and 'assetCustodian' in tender_data['data']:
+        tender_data = adapt_unit_names_asset(adapt_assetCustodian(tender_data))
+    return tender_data
+
+
+def adapt_unit_names_asset(tender_data):
+    if 'unit' in tender_data['data']['items'][0]:
+        for i in tender_data['data']['items']:
+            i['unit']['name'] = DZO_dict[i['unit']['name']]
+    return tender_data
+
+
+def adapt_assetCustodian(tender_data):
+    tender_data['data']['assetCustodian']['name'] = u'O. Privatizacii 3 (Ur. Osoba)'
+    tender_data['data']['assetCustodian']['identifier']['id'] = u'21351323'
+    tender_data['data']['assetCustodian']['identifier']['legalName'] = u'O. Privatizacii 3 (Ur. Osoba)'
+    tender_data['data']['assetCustodian']['contactPoint']['name'] = u'ОргПриватизТри ОргПривТри ОргПривТри'
+    tender_data['data']['assetCustodian']['contactPoint']['telephone'] = u'+380325131356'
+    tender_data['data']['assetCustodian']['contactPoint']['email'] = u'ustudiotestin.g@gmail.com'
+    return tender_data
+#############################end###################################################################################33
