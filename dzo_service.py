@@ -33,12 +33,8 @@ DZO_dict = {u'килограммы': u'кг', u'кілограм': u'кг', u'к
             u'ТИП АУКЦІОНУ: АУКЦІОН ЗА МЕТОДОМ ПОКРОКОВОГО ЗНИЖЕННЯ СТАРТОВОЇ ЦІНИ ТА ПОДАЛЬШОГО ПОДАННЯ ЦІНОВИХ ПРОПОЗИЦІЙ': u'sellout.insider',
             u'СТАТУС АУКЦІОНУ: ЗАПЛАНОВАНО.': u'scheduled',
             u'СТАТУС АУКЦІОНУ: В ПРОЦЕСІ.': u'active',
-            u'Інформація про оприлюднення інформаційного повідомлення': u'informationDetails',
-            u'assetCustodian.identifier.id': u'21351323',
-            u'assetCustodian.identifier.legalName': u'O. Privatizacii 3 (Ur. Osoba)',
-            u'assetCustodian.contactPoint.name': u'ОргПриватизТри ОргПривТри ОргПривТри',
-            u'assetCustodian.contactPoint.telephone': u'+380325131356',
-            u'assetCustodian.contactPoint.email': u'ustudiotestin.g@gmail.com'}
+            u'Інформація про оприлюднення інформаційного повідомлення': u'informationDetails'}
+
 
 
 def convert_date_for_decision(date):
@@ -80,8 +76,6 @@ def convert_decision_data(data, field):
         data = convert_date_from_asset(data)
     return data
 
-########################## adapt data ##############################################################################
-
 def adapt_data_for_role(role_name, tender_data):
     if role_name == 'tender_owner' and 'assetCustodian' in tender_data['data']:
         tender_data = adapt_unit_names_asset(adapt_assetCustodian(tender_data))
@@ -103,4 +97,10 @@ def adapt_assetCustodian(tender_data):
     tender_data['data']['assetCustodian']['contactPoint']['telephone'] = u'+380325131356'
     tender_data['data']['assetCustodian']['contactPoint']['email'] = u'ustudiotestin.g@gmail.com'
     return tender_data
-#############################end###################################################################################33
+
+def adapt_items_data(field_name, value):
+    if field_name == 'quantity':
+        value = float(value)
+    elif field_name != 'unit.name':
+        value = convert_string_from_dict_dzo(value)
+    return value

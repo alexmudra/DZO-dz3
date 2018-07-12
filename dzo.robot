@@ -19,13 +19,6 @@ ${locator.assetId}  xpath=//td[@class="nameField"][contains(text(),"Іденти
 
 Підготувати клієнт для користувача
   [Arguments]  ${username}
-#  #Set Global Variable   ${DZO_MODIFICATION_DATE}   ${EMPTY}
-#  Set Suite Variable  ${my_alias}  ${username + 'CUSTOM'}
-#  Run Keyword If   "${USERS.users['${username}'].browser}" == "Firefox"   Створити драйвер для Firefox   ${username}
-#  ...   ELSE   Open Browser   ${USERS.users['${username}'].homepage}   ${USERS.users['${username}'].browser}   alias=${my_alias}
-#  Set Window Size   @{USERS.users['${username}'].size}
-#  Set Window Position   @{USERS.users['${username}'].position}
-#  Run Keyword If   'Viewer' not in '${username}'   Login   ${username}
     ${chrome_options}=    Evaluate    sys.modules['selenium.webdriver'].ChromeOptions()    sys
     Run Keyword If  '${USERS.users['${username}'].browser}' in 'Chrome chrome'  Run Keywords
     ...  Call Method  ${chrome_options}  add_argument  --headless
@@ -72,7 +65,11 @@ Login
   Click Element  //span[contains(text(),"ОБ'ЄКТИ")]
   Select From List By Value  name=filter[object]  assetID
   Input Text  name=filter[search]  ${tender_uaid}
-  Click Element  xpath=//button[contains(@class, "not_toExtend")]
+  #Click Element  xpath=//button[contains(@class, "not_toExtend")]
+  Wait Until Keyword Succeeds   30 x   10 s  Run Keywords
+  ...  Execute Javascript  $(".jivo_shadow").remove()
+  ...  AND  Click Element  xpath=//button[@class='btn not_toExtend'][./text()='Пошук']
+  ...  AND  Wait Until Page Contains   ${tender_uaid}  5
   Wait Until Page Contains Element  xpath=//span[@class="cdValue"][contains(text(),"${tender_uaid}")]
   Click Element  xpath=//*[contains('${tender_uaid}',text()) and contains(text(), '${tender_uaid}')]/ancestor::div[@class="item relative"]/descendant::a[@class="reverse tenderLink"]
   Wait Until Page Does Not Contain Element   xpath=//form[@name="filter"]
@@ -100,9 +97,9 @@ Login
   ${items}=   Get From Dictionary   ${tender_data.data}   items
   ${number_of_items}=  Get Length  ${items}
   Click Element  xpath=//div[contains(text(),"Мій кабінет")]
-  Wait Until Element Is Visible  xpath=//div[contains(@class, "um_assets")]/a  20
+  Wait Until Element Is Visible  xpath=//div[contains(@class, "um_assets")]/a  30
   Click Element  xpath=//div[contains(@class, "um_assets")]/a
-  Wait Until Element Is Visible  xpath=//a[@class="reverse"][contains(text(),"Опубліковані")]  20
+  Wait Until Element Is Visible  xpath=//a[@class="reverse"][contains(text(),"Опубліковані")]  30
   Click Element  xpath=//a[@class="reverse"][contains(text(),"Опубліковані")]
   Click Element  xpath=//div[@class="newTender multiButtons"]/a
   Wait Until Page Contains Element  xpath=//button[@class="save button"][contains(text(),"Створити об'єкт")]
@@ -168,12 +165,6 @@ Login
   Click Element  xpath=//button[@value="save"]
   Wait Until Element Is Visible  xpath=//td[contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
 
-#Отримати інформацію із об'єкта МП
-#  [Arguments]  ${username}  ${tender_uaid}  ${field}
-#
-#  ${value}=  Run Keyword If  'decisions' in '${field}'  Отримати інформацію про decisions  ${field}
-#  ...  ELSE  dzo.Отримати інформацію про ${field}
-#  [Return]  ${value}
 
 Отримати інформацію про decisions
   [Arguments]  ${field}
@@ -209,53 +200,37 @@ Login
   ...  ELSE IF  'assetCustodian.contactPoint.telephone' == '${field}'  Get Text  xpath=(//td[contains(text(), "Телефон")])[1]/following-sibling::td[1]
   ...  ELSE IF  'assetCustodian.contactPoint.email' == '${field}'  Get Text  xpath=(//td[contains(text(),"E-mail")])[1]/following-sibling::td[1]
   ...  ELSE IF  'documents[0].documentType' == '${field}'  Get Text  xpath=//a[contains(@href, "info/ss")]/following-sibling::div/span
-  ...  ELSE IF  'description' == '${field}'  Get Text  xpath=//h2[@class="tenderDescr"]
-  ...  ELSE IF  'classification.scheme' == '${field}'  Get Text  xpath=//
-  ...  ELSE IF  'classification.id' == '${field}'  Get Text  xpath=//
-  ...  ELSE IF  'unit.name' == '${field}'  Get Text  xpath=//
-  ...  ELSE IF  'quantity' == '${field}'  Get Text  xpath=//
-  ...  ELSE IF  'registrationDetails.status' == '${field}'  Get Text  xpath=//
-
-
-
-
-#Отримати інформацію про assetHolder.name
-#  ${name}=   Отримати текст із поля і показати на сторінці   assetHolder.name
-#  [Return]  ${name}
-#
-#Отримати текст із поля і показати на сторінці
-#  [Arguments]   ${fieldname}
-#  sleep  1
-#  Scroll To Element  ${locator.${fieldname}}
-#  ${return_value}=  Get Text  ${locator.${fieldname}}
-#  [Return]  ${return_value}
-#
-#Scroll To Element
-#  [Arguments]  ${locator}
-#  ${elem_vert_pos}=  Get Vertical Position  ${locator}
-##  Execute Javascript  window.scrollTo(0,${elem_vert_pos - 200});
-
 
   ${value}=  adapt_asset_data  ${field}  ${value}
-
   [Return]  ${value}
 
 
+Отримати інформацію з активу об'єкта МП
+  [Arguments]  ${username}  ${tender_uaid}  ${item_id}  ${field_name}
+  ${item_value}=  Run Keyword If  'classification.scheme' in "${field_name}"  Get Element Attribute  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/./following-sibling::div[1]/span[1]@data-classification-scheme
+  ...  ELSE IF  'description' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]
+  ...  ELSE IF  'classification.id' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/./following-sibling::div[1]/span[2]
+  ...  ELSE IF  'unit.name' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/../following-sibling::td/span[2]
+  ...  ELSE IF  'quantity' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/../following-sibling::td/span[1]
+  ...  ELSE IF  'registrationDetails.status' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/following-sibling::div[4]/span[1]
 
-#Відображення назви організації балансоутримувача об'єкта МП
-#  [Tags]   ${USERS.users['${viewer}'].broker}: Відображення основних даних об'єкта МП
-#  ...      viewer  tender_owner
-#  ...      ${USERS.users['${viewer}'].broker}  ${USERS.users['${tender_owner}'].broker}
-#  ...      asset_view
-#  Звірити відображення поля assetHolder.name тендера для усіх користувачів
-
-#Отримати інформацію про documents[0].documentType
-#  ${type}=   Get Text  xpath=//a[contains(@href, "info/ss")]/following-sibling::div/span
-#  ${type}=  convert_string_from_dict_dzo  ${type}
-#  [return]  ${type}
-
+  ${item_value}=   adapt_items_data   ${field_name}   ${item_value}
+  [Return]  ${item_value}
 
 
+Завантажити документ в об'єкт МП з типом
+  [Arguments]  ${username}  ${tender_uaid}  ${filepath}  ${type}
+  dzo.Пошук об’єкта МП по ідентифікатору  ${username}  ${tender_uaid}
+  Click Element  xpath=//a[contains(text(),"Редагувати")]
+  Wait Until Element Is Visible  xpath=//button[contains(text(),"Зберегти")]
+  Click Element  xpath=(//a[@class="accordionOpen icons icon_view"])[2]
+  Choose File  xpath=//input[@name="upload"]  ${filepath}
+#  Input Text  xpath=//div[@style="display: block;"]/descendant::input[@value="${filepath.split('/')[-1]}"]   ${filepath.split('/')[-1]}
+  Wait Until Element Is Visible  xpath=(//*[contains(@class, 'js-documentType')])[last()]
+  Select From List By Value  xpath=(//*[contains(@class, 'js-documentType')])[last()]  ${type}
+  Click Button  xpath=//button[@value='save']
+  Sleep  180
 
-
-
+Завантажити ілюстрацію в об'єкт МП
+  [Arguments]  ${username}  ${tender_uaid}  ${filepath}
+  dzo.Завантажити документ в об'єкт МП з типом  ${username}  ${tender_uaid}  ${filepath}  illustration
