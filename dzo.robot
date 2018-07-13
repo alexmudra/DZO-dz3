@@ -217,6 +217,11 @@ Login
   ${item_value}=   adapt_items_data   ${field_name}   ${item_value}
   [Return]  ${item_value}
 
+Отримати текст із поля і показати на сторінці
+  [Arguments]   ${fieldname}
+  sleep  1
+  ${return_value}=    Get Text  ${locator.${fieldname}}
+  [Return]  ${return_value}
 
 Завантажити документ в об'єкт МП з типом
   [Arguments]  ${username}  ${tender_uaid}  ${filepath}  ${type}
@@ -226,7 +231,7 @@ Login
   Click Element  xpath=(//a[@class="accordionOpen icons icon_view"])[2]
   Choose File  xpath=//input[@name="upload"]  ${filepath}
 #  Input Text  xpath=//div[@style="display: block;"]/descendant::input[@value="${filepath.split('/')[-1]}"]   ${filepath.split('/')[-1]}
-  Wait Until Element Is Visible  xpath=(//*[contains(@class, 'js-documentType')])[last()]
+  Wait Until Element Is Visible  xpath=//div[contains(@class,"langSwitch_uk")]/input[contains(@value,"${filepath.split('/')[-1]}")]        #ХОРОШИЙ ЛОКАТОР
   Select From List By Value  xpath=(//*[contains(@class, 'js-documentType')])[last()]  ${type}
   Click Button  xpath=//button[@value='save']
   Sleep  180
@@ -234,3 +239,18 @@ Login
 Завантажити ілюстрацію в об'єкт МП
   [Arguments]  ${username}  ${tender_uaid}  ${filepath}
   dzo.Завантажити документ в об'єкт МП з типом  ${username}  ${tender_uaid}  ${filepath}  illustration
+
+#Відображення вмісту документації до об'єкта МП
+#  [Arguments]  ${username}  ${doc_id}
+
+Внести зміни в об'єкт МП
+  [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
+  dzo.Пошук об’єкта МП по ідентифікатору  ${username}  ${tender_uaid}
+  Wait Until Element Is Visible  xpath=//a[contains(text(),"Редагувати")]
+  Click Element  xpath=//a[contains(text(),"Редагувати")]
+
+#dzo.Внести зміни в актив об'єкта МП'
+
+
+
+
