@@ -44,10 +44,6 @@ ${locator.assetId}  xpath=//td[@class="nameField"][contains(text(),"Іденти
   Create WebDriver   ${USERS.users['${username}'].browser}   alias=${my_alias}   firefox_profile=${profile}
   Go To   ${USERS.users['${username}'].homepage}
 
-
-#######################################################МІЙ КОД##########################################################
-
-
 Login
   [Arguments]  ${username}
   Click Element  xpath=//div[@class="authBtn"]/a
@@ -177,8 +173,8 @@ Login
   [Return]  ${value}
 
 
-#Отримати інформацію із об'єкта МП
-#######      МІЙ КОД      #######
+
+#####################################################      МІЙ КОД      ################################################
 
 Отримати інформацію із об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${field}
@@ -186,7 +182,7 @@ Login
   ...  ELSE IF  'assetCustodian.identifier.legalName' in '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[1]/following-sibling::td[1]/descendant::span
   ...  ELSE IF  'date' == '${field}'  Get Element Attribute  xpath=//*[@data-test-date]@data-test-date
   ...  ELSE IF  'rectificationPeriod.endDate' in '${field}'  Get Element Attribute  xpath=//*[@data-test-rectificationperiod-enddate]@data-test-rectificationperiod-enddate
-  ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(text(),"Опубліковано. Очікування інформаційного повідомлення")]
+  ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(@class,"statusItem active")]/descendant::div[contains(@class,"statusName")][last()]
   ...  ELSE IF  'title' == '${field}'  Get Text  xpath=//div/h1
   ...  ELSE IF  'decision' in '${field}'  Отримати інформацію про decisions  ${field}
   ...  ELSE IF  'description' == '${field}'  Get Text  xpath=//h2[@class="tenderDescr"]
@@ -240,7 +236,6 @@ Login
   Wait Until Element Is Visible  xpath=//button[contains(text(),"Зберегти")]
   Click Element  xpath=(//a[@class="accordionOpen icons icon_view"])[2]
   Choose File  xpath=//input[@name="upload"]  ${filepath}
-#  Input Text  xpath=//div[@style="display: block;"]/descendant::input[@value="${filepath.split('/')[-1]}"]   ${filepath.split('/')[-1]}
   Wait Until Element Is Visible  xpath=//div[contains(@class,"langSwitch_uk")]/input[contains(@value,"${filepath.split('/')[-1]}")]        #ХОРОШИЙ ЛОКАТОР
   Select From List By Value  xpath=(//*[contains(@class, 'js-documentType')])[last()]  ${type}
   Click Button  xpath=//button[@value='save']
@@ -257,7 +252,6 @@ Login
   Click Element  xpath=//a[contains(text(),"Редагувати")]
   Run Keyword If  "title" in "${fieldname}"   Input Text  xpath=//input[@name="data[title]"]  ${fieldvalue}
   ...  ELSE IF  "description" in "${fieldname}"   Input Text  xpath=//input[@name="data[description]"]  ${fieldvalue}
-# ...  ELSE IF  "quantity" in "${fieldname}"   Input Text  name=data[items][0][quantity]  ${fieldvalue}
   Click Element  xpath=//button[contains(text(),"Зберегти")]
   Wait Until Page Contains Element  ${locator.assetId}
 
@@ -272,3 +266,40 @@ Login
   Run Keyword If  "quantity" in "${field_name}"   Input Text  xpath=(//input[contains(@value,"${item_id}")])[1]/../../../following-sibling::tr/descendant::input  ${field_value}
   Click Element  xpath=//button[contains(text(),"Зберегти")]
   Wait Until Page Contains Element  ${locator.assetId}
+
+
+Завантажити документ для видалення об'єкта МП
+  [Arguments]  ${username}  ${tender_uaid}  ${filepath}
+  dzo.Пошук об’єкта МП по ідентифікатору  ${username}  ${tender_uaid}
+  Click Element  xpath=//a[@class='button assetCancelCommand']
+  Wait Until Element Is Visible  xpath=//div[@class="jContent"]
+  Click Element  xpath=//div/a[@class="jBtn green"]
+  Wait Until Element Is Visible  xpath=//div/h1[contains(text(), "Причина скасування об'єкту")]
+  Choose File  xpath=//input[@type="file"]  ${filepath}
+  #Wait Until Element Is Visible  xpath=//button[@class="icons icon_upload relative"]
+  Wait Until Element Is Not Visible  id=jAlertBack
+  Click Element  xpath=//button[contains(text(),"Додати")]
+  Wait Until Element Is Visible  xpath=//div[@class="jContent"]
+  Click Element  xpath=//div/a[@class="jBtn green"]
+  #Reload Page
+  Wait Until Element Is Not Visible  xpath=//div/a[@class="jBtn green"]
+
+
+Видалити об'єкт МП
+  [Arguments]  ${username}  ${tender_uaid}
+  dzo.Пошук об’єкта МП по ідентифікатору  ${username}  ${tender_uaid}
+  Click Element  xpath=//a[@class='button assetCancelCommand']
+  Wait Until Element Is Visible  xpath=//div[@class="jContent"]
+  Click Element  xpath=//div/a[@class="jBtn green"]
+  Wait Until Element Is Visible  xpath=//div/h1[contains(text(), "Причина скасування об'єкту")]
+  Click Element  xpath=//button[contains(text(),"Зберегти")]
+  Click Element  xpath=//div/a[@class="jBtn green"]
+  Wait Until Element Is Visible  xpath=//div[contains(text(),"Скасування в процесі")]
+  Wait Until Element Is Not Visible  xpath=//div/h1[contains(text(), "Причина скасування об'єкту")]
+  Reload Page
+  Wait Until Element Is Visible  xpath=//div[contains(text(),"Виключено з переліку")][last()]
+
+
+
+
+########################################    ЛОТИ    ####################################################################
