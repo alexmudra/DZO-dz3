@@ -156,7 +156,7 @@ Login
 Додати актив до об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${item}
   dzo.Пошук об’єкта МП по ідентифікатору  ${username}  ${tender_uaid}
-  Wait Until Page Contains  xpath=//a[contains(text(),"Редагувати")]
+  Wait Until Element Is Visible  xpath=//a[contains(text(),"Редагувати")]
   Click Element  xpath=//a[contains(text(),"Редагувати")]
   Wait Until Element Is Visible  xpath=//h3[@class="title bigTitle"][contains(text(),"Рішення про затвердження переліку об’єктів, або про включення нового об’єкта до переліку")]
   Click Element  xpath=//section[@id="multiItems"]/a
@@ -183,7 +183,7 @@ Login
 Отримати інформацію із об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${field}
   ${value}=  run keyword if  '${field}' == 'assetID'  Get Text  xpath=//td[contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
-  ...  ELSE IF  'assetCustodian.identifier.legalName' in '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[1]/following-sibling::td[1]/a/span
+  ...  ELSE IF  'assetCustodian.identifier.legalName' in '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[1]/following-sibling::td[1]/descendant::span
   ...  ELSE IF  'date' == '${field}'  Get Element Attribute  xpath=//*[@data-test-date]@data-test-date
   ...  ELSE IF  'rectificationPeriod.endDate' in '${field}'  Get Element Attribute  xpath=//*[@data-test-rectificationperiod-enddate]@data-test-rectificationperiod-enddate
   ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(text(),"Опубліковано. Очікування інформаційного повідомлення")]
@@ -200,6 +200,8 @@ Login
   ...  ELSE IF  'assetCustodian.contactPoint.telephone' == '${field}'  Get Text  xpath=(//td[contains(text(), "Телефон")])[1]/following-sibling::td[1]
   ...  ELSE IF  'assetCustodian.contactPoint.email' == '${field}'  Get Text  xpath=(//td[contains(text(),"E-mail")])[1]/following-sibling::td[1]
   ...  ELSE IF  'documents[0].documentType' == '${field}'  Get Text  xpath=//a[contains(@href, "info/ss")]/following-sibling::div/span
+  ...  ELSE IF  'dateModified' == '${field}'  Get Element Attribute  xpath=//*[@data-test-date]@data-test-datemodified
+
 
   ${value}=  adapt_asset_data  ${field}  ${value}
   [Return]  ${value}
@@ -213,9 +215,17 @@ Login
   ...  ELSE IF  'unit.name' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/../following-sibling::td/span[2]
   ...  ELSE IF  'quantity' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/../following-sibling::td/span[1]
   ...  ELSE IF  'registrationDetails.status' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/following-sibling::div[4]/span[1]
-
   ${item_value}=   adapt_items_data   ${field_name}   ${item_value}
   [Return]  ${item_value}
+
+Отримати документ
+  [Arguments]  ${username}  ${tender_uaid}  ${doc_id}
+  Execute Javascript   $(".bottomFixed").remove();
+  ${file_name}=   Get Text   xpath=//span[contains(text(),'${doc_id}')]
+  ${url}=   Get Element Attribute   xpath=//*[contains(text(),'${doc_id}')]/ancestor::*[@class="tenderFullListElement docItem"]/descendant::a@href
+  dzo_download_file   ${url}  ${file_name.split('/')[-1]}  ${OUTPUT_DIR}
+  [Return]  ${file_name.split('/')[-1]}
+
 
 Отримати текст із поля і показати на сторінці
   [Arguments]   ${fieldname}
@@ -240,17 +250,25 @@ Login
   [Arguments]  ${username}  ${tender_uaid}  ${filepath}
   dzo.Завантажити документ в об'єкт МП з типом  ${username}  ${tender_uaid}  ${filepath}  illustration
 
-#Відображення вмісту документації до об'єкта МП
-#  [Arguments]  ${username}  ${doc_id}
-
 Внести зміни в об'єкт МП
   [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
   dzo.Пошук об’єкта МП по ідентифікатору  ${username}  ${tender_uaid}
   Wait Until Element Is Visible  xpath=//a[contains(text(),"Редагувати")]
   Click Element  xpath=//a[contains(text(),"Редагувати")]
+  Run Keyword If  "title" in "${fieldname}"   Input Text  xpath=//input[@name="data[title]"]  ${fieldvalue}
+  ...  ELSE IF  "description" in "${fieldname}"   Input Text  xpath=//input[@name="data[description]"]  ${fieldvalue}
+# ...  ELSE IF  "quantity" in "${fieldname}"   Input Text  name=data[items][0][quantity]  ${fieldvalue}
+  Click Element  xpath=//button[contains(text(),"Зберегти")]
+  Wait Until Page Contains Element  ${locator.assetId}
 
-#dzo.Внести зміни в актив об'єкта МП'
 
-
-
-
+Внести зміни в актив об'єкта МП
+  [Arguments]  ${username}  ${item_id}  ${tender_uaid}  ${field_name}  ${field_value}
+  dzo.Пошук об’єкта МП по ідентифікатору  ${username}  ${tender_uaid}
+  Wait Until Element Is Visible  xpath=//a[contains(text(),"Редагувати")]
+  Click Element  xpath=//a[contains(text(),"Редагувати")]
+  Click Element  xpath=(//a[@class="accordionOpen icons icon_view"])[1]
+  ${fieldvalue}=  Convert To String  ${field_value}
+  Run Keyword If  "quantity" in "${field_name}"   Input Text  xpath=(//input[contains(@value,"${item_id}")])[1]/../../../following-sibling::tr/descendant::input  ${field_value}
+  Click Element  xpath=//button[contains(text(),"Зберегти")]
+  Wait Until Page Contains Element  ${locator.assetId}

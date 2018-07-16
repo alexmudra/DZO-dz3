@@ -104,3 +104,6 @@ def adapt_items_data(field_name, value):
     elif field_name != 'unit.name':
         value = convert_string_from_dict_dzo(value)
     return value
+
+def dzo_download_file(url, file_name, output_dir):
+    urllib.urlretrieve(url, ('{}/{}'.format(output_dir, file_name)))
