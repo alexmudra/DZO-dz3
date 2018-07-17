@@ -281,7 +281,6 @@ Login
   Click Element  xpath=//button[contains(text(),"Додати")]
   Wait Until Element Is Visible  xpath=//div[@class="jContent"]
   Click Element  xpath=//div/a[@class="jBtn green"]
-  #Reload Page
   Wait Until Element Is Not Visible  xpath=//div/a[@class="jBtn green"]
 
 
@@ -291,13 +290,14 @@ Login
   Click Element  xpath=//a[@class='button assetCancelCommand']
   Wait Until Element Is Visible  xpath=//div[@class="jContent"]
   Click Element  xpath=//div/a[@class="jBtn green"]
+  Wait Until Element Is Not Visible  id=jAlertBack
   Wait Until Element Is Visible  xpath=//div/h1[contains(text(), "Причина скасування об'єкту")]
   Click Element  xpath=//button[contains(text(),"Зберегти")]
+  Wait Until Element Is Visible  xpath=//div[@class="jContent"]
   Click Element  xpath=//div/a[@class="jBtn green"]
   Wait Until Element Is Visible  xpath=//div[contains(text(),"Скасування в процесі")]
-  Wait Until Element Is Not Visible  xpath=//div/h1[contains(text(), "Причина скасування об'єкту")]
   Reload Page
-  Wait Until Element Is Visible  xpath=//div[contains(text(),"Виключено з переліку")][last()]
+
 
 
 
