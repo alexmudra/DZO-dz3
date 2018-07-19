@@ -107,3 +107,22 @@ def adapt_items_data(field_name, value):
 
 def dzo_download_file(url, file_name, output_dir):
     urllib.urlretrieve(url, ('{}/{}'.format(output_dir, file_name)))
+
+def Convert_Date_To_Slash_Format(isodate):
+    iso_dt = parse_date(isodate)
+    date_string = iso_dt.strftime("%d/%m/%Y")
+    return date_string
+
+def add_second_sign_after_point(amount):
+    amount = str(amount)
+    if '.' in amount and len(amount.split('.')[1]) == 1:
+        amount += '0'
+    return amount
+
+def adapt_edrpou(value):
+    value = str(value)
+    if len(value) == 7:
+        value += '0'
+    elif len(value) == 6:
+        value += '00'
+    return value

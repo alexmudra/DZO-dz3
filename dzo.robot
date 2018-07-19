@@ -7,7 +7,7 @@ Library  dzo_service.py
 Library  Collections
 
 *** Variables ***
-${locator.assetId}  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
+#${locator.assetId}  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
 
 *** Keywords ***
 Підготувати дані для оголошення тендера
@@ -61,7 +61,6 @@ Login
   Click Element  //span[contains(text(),"ОБ'ЄКТИ")]
   Select From List By Value  name=filter[object]  assetID
   Input Text  name=filter[search]  ${tender_uaid}
-  #Click Element  xpath=//button[contains(@class, "not_toExtend")]
   Wait Until Keyword Succeeds   30 x   10 s  Run Keywords
   ...  Execute Javascript  $(".jivo_shadow").remove()
   ...  AND  Click Element  xpath=//button[@class='btn not_toExtend'][./text()='Пошук']
@@ -69,7 +68,7 @@ Login
   Wait Until Page Contains Element  xpath=//span[@class="cdValue"][contains(text(),"${tender_uaid}")]
   Click Element  xpath=//*[contains('${tender_uaid}',text()) and contains(text(), '${tender_uaid}')]/ancestor::div[@class="item relative"]/descendant::a[@class="reverse tenderLink"]
   Wait Until Page Does Not Contain Element   xpath=//form[@name="filter"]
-  ${tender_uaid}=  Get Text  ${locator.assetId}
+  ${tender_uaid}=  Get Text  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
   [Return]  ${tender_uaid}
 
 
@@ -88,7 +87,6 @@ Login
 
 Створити об'єкт МП
   [Arguments]  ${username}  ${tender_data}
-
   ${decisions}=   Get From Dictionary   ${tender_data.data}   decisions
   ${items}=   Get From Dictionary   ${tender_data.data}   items
   ${number_of_items}=  Get Length  ${items}
@@ -121,7 +119,7 @@ Login
   Select From List By Value  name=data[assetHolder][identifier][scheme]  ${tender_data.data.assetHolder.identifier.scheme}
   Click Element   xpath=//button[@value='publicate']
   Wait Until Page Contains   Об'єкт опубліковано   30
-  ${tender_uaid}=   Get Text   ${locator.assetId}
+  ${tender_uaid}=   Get Text   xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
   [Return]  ${tender_uaid}
 
 
@@ -174,7 +172,7 @@ Login
 
 
 
-#####################################################      МІЙ КОД      ################################################
+#####################################################      ASSETS     ################################################
 
 Отримати інформацію із об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${field}
@@ -222,7 +220,6 @@ Login
   dzo_download_file   ${url}  ${file_name.split('/')[-1]}  ${OUTPUT_DIR}
   [Return]  ${file_name.split('/')[-1]}
 
-
 Отримати текст із поля і показати на сторінці
   [Arguments]   ${fieldname}
   sleep  1
@@ -253,7 +250,7 @@ Login
   Run Keyword If  "title" in "${fieldname}"   Input Text  xpath=//input[@name="data[title]"]  ${fieldvalue}
   ...  ELSE IF  "description" in "${fieldname}"   Input Text  xpath=//input[@name="data[description]"]  ${fieldvalue}
   Click Element  xpath=//button[contains(text(),"Зберегти")]
-  Wait Until Page Contains Element  ${locator.assetId}
+  Wait Until Page Contains Element  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
 
 
 Внести зміни в актив об'єкта МП
@@ -265,7 +262,7 @@ Login
   ${fieldvalue}=  Convert To String  ${field_value}
   Run Keyword If  "quantity" in "${field_name}"   Input Text  xpath=(//input[contains(@value,"${item_id}")])[1]/../../../following-sibling::tr/descendant::input  ${field_value}
   Click Element  xpath=//button[contains(text(),"Зберегти")]
-  Wait Until Page Contains Element  ${locator.assetId}
+  Wait Until Page Contains Element  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Об'єкту")]/following-sibling::td[1]/a/span
 
 
 Завантажити документ для видалення об'єкта МП
@@ -298,8 +295,111 @@ Login
   Wait Until Element Is Visible  xpath=//div[contains(text(),"Скасування в процесі")]
   Reload Page
 
+########################################    LOTS / ЛОТИ    ####################################################################
+
+Створити лот
+  [Arguments]   ${username}  ${tender_data}  ${tender_uaid}
+  dzo.Пошук об’єкта МП по ідентифікатору  ${username}  ${tender_uaid}
+  Scroll And Click Element  xpath=//a[@class="button"][contains(@href, "/lots/new")]
+  Wait Until Element Is Visible  xpath=//h3[@class="title bigTitle"][contains(text(),"Рішення про затвердження умов продажу")]
+  ${decisions}=   Get From Dictionary   ${tender_data.data}   decisions
+  ${decisionDate}=  convert_date_for_decision  ${decisions[0].decisionDate}
+  Execute Javascript  $("input[name|='data[decisions][0][decisionDate]']").removeAttr('readonly'); $("input[name|='data[decisions][0][decisionDate]']").unbind();
+  Input Text  xpath=//input[@name="data[decisions][0][decisionDate]"]  ${decisionDate}
+  Input Text  name=data[decisions][0][decisionID]  ${decisions[0].decisionID}
+  Click Element  xpath=//section[contains(@class, "accordionItem")]/a
+  Wait Until Page Contains Element  xpath=//td[contains(text(),"Початкова ціна аукціону")]
+  Input Text  name=data[auctions][0][value][amount]  123456
+  Input Text  name=data[auctions][0][minimalStep][amount]  100
+  Input Text  name=data[auctions][0][guarantee][amount]  2000
+  ${date}=  dzo_service.convert date to slash format  2018-10-22T20:13:54.056608+03:00
+  Focus  name= data[auctions][0][auctionPeriod][startDate]
+  Execute Javascript  $("input[name|='data[auctions][0][auctionPeriod][startDate]']").removeAttr('readonly'); $("input[name|='data[auctions][0][auctionPeriod][startDate]']").unbind();
+  Input Text  name=data[auctions][0][auctionPeriod][startDate]  ${date}
+  Run Keyword And Ignore Error  Wait Until Element Is Visible  ${date}  20
+  Input Text  name=data[auctions][0][bankAccount][description]  Трям Тарарам
+  Input Text  name=data[auctions][0][bankAccount][bankName]  Це назва банку Трям Тарарам
+  Input Text  name=data[auctions][0][bankAccount][accountIdentification][0][id]  12345678
+  Input Text  name=data[auctions][0][bankAccount][accountIdentification][1][id]  123456
+  Input Text  name=data[auctions][0][bankAccount][accountIdentification][2][id]  6512
+  #Select From List By Value  name= data[auctions][1][tenderingDuration]  35
+  #Input Name  name=data[auctions][2][auctionParameters][dutchSteps]  99
+  Scroll And Click Element  xpath=//button[@value='publicate']
+  Wait Until Page Contains  Перевірка доступності об’єкту  30
+  ${lot_id}=  Get Text  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
+  [Return]  ${lot_id}
+
+Можливість знайти лот по ідентифікатору
+  [Arguments]  ${username}  ${tender_uaid}
+  Go To  ${USERS.users['${username}'].homepage}
+  Click Element  xpath=//span[contains(text(),"ПОВІДОМЛЕННЯ")]
+  Select From List By Value  name=filter[object]  lotID
+  Input Text  name=filter[search]  ${tender_uaid}
+  Wait Until Keyword Succeeds   30 x   10 s  Run Keywords
+  ...  Execute Javascript  $(".jivo_shadow").remove()
+  ...  AND  Click Element  xpath=//button[@class='btn not_toExtend'][./text()='Пошук']
+  ...  AND  Wait Until Page Contains   ${tender_uaid}  5
+  Wait Until Page Contains Element  xpath=//span[contains(text(),"${tender_uaid}")]
+  Click Element  xpath=//*[contains('${tender_uaid} ',text()) and contains(text(), '${tender_uaid}')]/ancestor::div[@class="item relative"]/descendant::a[@class="reverse tenderLink"]
+  Wait Until Page Contains Element  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
+  ${tender_uaid}=  Get Text  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
+  [Return]  ${tender_uaid}
+
+
+Додати умови проведення аукціону
+  [Arguments]   ${username}  ${tender_data}  ${index}  ${tender_uaid}
+  dzo.Можливість знайти лот по ідентифікатору  ${username}  ${tender_uaid}
+  Wait Until Keyword Succeeds   30 x   10 s  Run Keywords
+  ...  Reload Page
+  ...  AND  Wait Until Element Is Visible  xpath=//a[contains(text(),"Редагувати")]
+  Click Element  xpath=//a[contains(text(),"Редагувати")]
+  Wait Until Element Is Visible  xpath=//button[contains(text(),"Зберегти")]
+  Click Element  xpath=(//a[@class="accordionOpen icons icon_view"])[3]
+  Wait Until Page Contains Element  xpath=//td[contains(text(),"Початкова ціна аукціону")]
+  ${value_amount}=  add_second_sign_after_point  ${tender_data.value.amount}
+  ${value_minStep_amount}=  add_second_sign_after_point  ${tender_data.minimalStep.amount}
+  ${value_guarantie_amount}=  add_second_sign_after_point  ${tender_data.guarantee.amount}
+  Input Text  name=data[auctions][0][value][amount]  ${value_amount}
+  Input Text  name=data[auctions][0][minimalStep][amount]  ${value_minStep_amount}
+  Input Text  name=data[auctions][0][guarantee][amount]  ${value_guarantie_amount}
+  Focus  name= data[auctions][0][auctionPeriod][startDate]
+  Execute Javascript  $("input[name|='data[auctions][0][auctionPeriod][startDate]']").removeAttr('readonly'); $("input[name|='data[auctions][0][auctionPeriod][startDate]']").unbind();
+  Input Text  name=data[auctions][0][auctionPeriod][startDate]  ${tender_data.auctionPeriod.startDate}
+  Input Text  name=data[auctions][0][bankAccount][description]  ${tender_data.bankAccount.description}
+  ${account}=  Get From Dictionary  ${tender_data.bankAccount}  accountIdentification
+  Input Text  name=data[auctions][0][bankAccount][bankName]  ${tender_data.bankAccount.bankName}
+  ${bank_id}=  adapt_edrpou  ${account[0].id}
+  Input Text  name= data[auctions][0][bankAccount][accountIdentification][0][id]  ${bank_id}
+  Input Text  name= data[auctions][0][bankAccount][accountIdentification][1][id]  ${account[0].scheme}
+  Input Text  name= data[auctions][0][bankAccount][accountIdentification][0][description]  ${account[0].description}
+  ${tax}=  Convert To String   ${tender_data.value.valueAddedTaxIncluded}
+  ${tax}=  Convert To Lowercase  ${tax}
+  Select From List By Value  name= data[auctions][0][value][valueAddedTaxIncluded]  ${tax}
+  Scroll And Click Element  xpath=//button[@value='publicate']
+  Wait Until Page Contains  Перевірка доступності об’єкту  30
+  ${lot_id}=  Get Text  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
+  [Return]  ${lot_id}
+
+
+Scroll And Click Element
+  [Arguments]  ${locator}
+  Wait Until Element Is Visible   ${locator}   20
+  Scroll To Element  ${locator}
+  Click Element  ${locator}
+
+Scroll To Element
+  [Arguments]  ${locator}
+  ${elem_vert_pos}=  Get Vertical Position  ${locator}
+  Execute Javascript  window.scrollTo(0,${elem_vert_pos - 200});
+
+Оновити сторінку з лотом
+  [Arguments]  ${username}  ${tender_uaid}
+  dzo.Можливість знайти лот по ідентифікатору  ${username}  ${tender_uaid}
 
 
 
 
-########################################    ЛОТИ    ####################################################################
+
+
+${tax}=   Convert To String   ${auction.value.valueAddedTaxIncluded}
+${tax}=   Convert To Lowercase  ${tax}
