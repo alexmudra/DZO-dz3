@@ -108,7 +108,7 @@ def adapt_items_data(field_name, value):
 def dzo_download_file(url, file_name, output_dir):
     urllib.urlretrieve(url, ('{}/{}'.format(output_dir, file_name)))
 
-def Convert_Date_To_Slash_Format(isodate):
+def convert_date_to_slash_format(isodate):
     iso_dt = parse_date(isodate)
     date_string = iso_dt.strftime("%d/%m/%Y")
     return date_string
@@ -126,3 +126,14 @@ def adapt_edrpou(value):
     elif len(value) == 6:
         value += '00'
     return value
+
+# def convert_to_lowercase(string):
+#     return string.lower(string)
+
+def convert_duration(duration):
+    if duration == u'P1M':
+        duration = u'P30D'
+    days = re.search('\d+D|$', duration).group()
+    if len(days) > 0:
+        days = days[:-1]
+    return days

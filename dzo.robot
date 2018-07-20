@@ -1,5 +1,4 @@
 *** Settings ***
-Documentation               This is the basic test
 Library  Selenium2Library
 Library  String
 Library  DateTime
@@ -196,7 +195,6 @@ Login
   ...  ELSE IF  'documents[0].documentType' == '${field}'  Get Text  xpath=//a[contains(@href, "info/ss")]/following-sibling::div/span
   ...  ELSE IF  'dateModified' == '${field}'  Get Element Attribute  xpath=//*[@data-test-date]@data-test-datemodified
 
-
   ${value}=  adapt_asset_data  ${field}  ${value}
   [Return]  ${value}
 
@@ -329,15 +327,14 @@ Login
   ${lot_id}=  Get Text  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
   [Return]  ${lot_id}
 
-Можливість знайти лот по ідентифікатору
+Пошук лоту по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
   Go To  ${USERS.users['${username}'].homepage}
   Click Element  xpath=//span[contains(text(),"ПОВІДОМЛЕННЯ")]
   Select From List By Value  name=filter[object]  lotID
   Input Text  name=filter[search]  ${tender_uaid}
   Wait Until Keyword Succeeds   30 x   10 s  Run Keywords
-  ...  Execute Javascript  $(".jivo_shadow").remove()
-  ...  AND  Click Element  xpath=//button[@class='btn not_toExtend'][./text()='Пошук']
+  ...  Click Element  xpath=//button[@class='btn not_toExtend'][./text()='Пошук']
   ...  AND  Wait Until Page Contains   ${tender_uaid}  5
   Wait Until Page Contains Element  xpath=//span[contains(text(),"${tender_uaid}")]
   Click Element  xpath=//*[contains('${tender_uaid} ',text()) and contains(text(), '${tender_uaid}')]/ancestor::div[@class="item relative"]/descendant::a[@class="reverse tenderLink"]
@@ -347,8 +344,14 @@ Login
 
 
 Додати умови проведення аукціону
-  [Arguments]   ${username}  ${tender_data}  ${index}  ${tender_uaid}
-  dzo.Можливість знайти лот по ідентифікатору  ${username}  ${tender_uaid}
+   [Arguments]  ${username}  ${tender_data}  ${index}  ${tender_uaid}
+   Run Keyword If  ${index} == 0  Заповнити умови до першого аукціону  ${username}  ${tender_data}  ${tender_uaid}
+   ...  ELSE  Заповнити умови до другого аукціону  ${tender_data}
+
+
+Заповнити умови до першого аукціону
+  [Arguments]   ${username}  ${tender_data}  ${tender_uaid}
+  dzo.Пошук лоту по ідентифікатору  ${username}  ${tender_uaid}
   Wait Until Keyword Succeeds   30 x   10 s  Run Keywords
   ...  Reload Page
   ...  AND  Wait Until Element Is Visible  xpath=//a[contains(text(),"Редагувати")]
@@ -362,23 +365,67 @@ Login
   Input Text  name=data[auctions][0][value][amount]  ${value_amount}
   Input Text  name=data[auctions][0][minimalStep][amount]  ${value_minStep_amount}
   Input Text  name=data[auctions][0][guarantee][amount]  ${value_guarantie_amount}
+  ${start_date}=  dzo_service.convert date to slash format  ${tender_data.auctionPeriod.startDate}
   Focus  name= data[auctions][0][auctionPeriod][startDate]
   Execute Javascript  $("input[name|='data[auctions][0][auctionPeriod][startDate]']").removeAttr('readonly'); $("input[name|='data[auctions][0][auctionPeriod][startDate]']").unbind();
-  Input Text  name=data[auctions][0][auctionPeriod][startDate]  ${tender_data.auctionPeriod.startDate}
-  Input Text  name=data[auctions][0][bankAccount][description]  ${tender_data.bankAccount.description}
+  Input Text  name=data[auctions][0][auctionPeriod][startDate]  ${start_date}
+  ${auction_time}=  Set Variable  ${tender_data.auctionPeriod.startDate[11:19]}
+  Execute Javascript   $("input[name='auctionPeriod_time']").val("${auction_time}");
+  #Input Text  name=data[auctions][0][bankAccount][description]  ${tender_data.bankAccount.description}
   ${account}=  Get From Dictionary  ${tender_data.bankAccount}  accountIdentification
   Input Text  name=data[auctions][0][bankAccount][bankName]  ${tender_data.bankAccount.bankName}
   ${bank_id}=  adapt_edrpou  ${account[0].id}
-  Input Text  name= data[auctions][0][bankAccount][accountIdentification][0][id]  ${bank_id}
-  Input Text  name= data[auctions][0][bankAccount][accountIdentification][1][id]  ${account[0].scheme}
-  Input Text  name= data[auctions][0][bankAccount][accountIdentification][0][description]  ${account[0].description}
+  Input Text  name= data[auctions][0][bankAccount][accountIdentification][0][id]  ${bank_id}                                #ЄДРПОУ
   ${tax}=  Convert To String   ${tender_data.value.valueAddedTaxIncluded}
   ${tax}=  Convert To Lowercase  ${tax}
-  Select From List By Value  name= data[auctions][0][value][valueAddedTaxIncluded]  ${tax}
-  Scroll And Click Element  xpath=//button[@value='publicate']
-  Wait Until Page Contains  Перевірка доступності об’єкту  30
-  ${lot_id}=  Get Text  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
-  [Return]  ${lot_id}
+  Select From List By Value  name= data[auctions][0][value][valueAddedTaxIncluded]  ${tax}                                  #пдв
+
+Заповнити умови до другого аукціону
+  [Arguments]  ${tender_data}
+  ${auction_duration}=  convert_duration   ${tender_data.tenderingDuration}
+  Select From List By Value  name= data[auctions][1][tenderingDuration]  ${auction_duration}
+  Scroll And Click Element  xpath=//button[@value='save']
+  Wait Until Element Is Visible  xpath=//td[@class="nameField"][contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
+  Wait Until Page Contains  Опубліковано  30
+
+
+Отримати інформацію із лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${field}
+  ${value}=  run keyword if  '${field}' == 'lotID'  Get Text  xpath=//td[contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
+  ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(@class,"statusItem active")]/descendant::div[contains(@class,"statusName")][last()]
+  ${value}=  adapt_asset_data  ${field}  ${value}
+  [Return]  ${value}
+
+
+Завантажити документ для видалення лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${filepath}
+  dzo.Пошук лоту по ідентифікатору    ${username}  ${tender_uaid}
+  Click Element                       xpath=//a[@class='button lotCancelCommand']
+  Wait Until Element Is Visible       xpath=//div[@class="jContent"]
+  Click Element                       xpath=//div/a[@class="jBtn green"]
+  Wait Until Element Is Not Visible   xpath=//div/a[@class="jBtn green"]
+  Wait Until Element Is Visible       xpath=//div/h1[contains(text(), "Причини скасування Інформаційного повідомлення")]
+  Choose File                         xpath=//input[@type="file"]  ${filepath}
+  Wait Until Element Is Visible       xpath=//button[@class="icons icon_upload relative"]
+  Wait Until Element Is Not Visible   id=jAlertBack
+  Click Element                       xpath=//button[contains(text(),"Додати")]
+  Wait Until Element Is Visible       xpath=//div[@class="jContent"]
+  Click Element                       xpath=//div/a[@class="jBtn green"]
+  Wait Until Element Is Not Visible   xpath=//div/a[@class="jBtn green"]
+
+Видалити лот
+  [Arguments]  ${username}  ${tender_uaid}
+  dzo.Пошук лоту по ідентифікатору  ${username}  ${tender_uaid}
+  Click Element  xpath=//a[@class='button lotCancelCommand']
+  Wait Until Element Is Visible  xpath=//div/a[@class="jBtn green"]
+  Click Element  xpath=//div/a[@class="jBtn green"]
+  Wait Until Element Is Not Visible  id=jAlertBack
+  Wait Until Element Is Visible  xpath=//div/h1[contains(text(), "Причини скасування Інформаційного повідомлення")]
+  Click Element  xpath=//button[contains(text(),"Зберегти")]
+  Wait Until Element Is Visible  xpath=//div[@class="jContent"]
+  Click Element  xpath=//div/a[@class="jBtn green"]
+  Wait Until Element Is Visible  xpath=//div[contains(text(),"Скасування в процесі")]
+  Reload Page
 
 
 Scroll And Click Element
@@ -394,12 +441,4 @@ Scroll To Element
 
 Оновити сторінку з лотом
   [Arguments]  ${username}  ${tender_uaid}
-  dzo.Можливість знайти лот по ідентифікатору  ${username}  ${tender_uaid}
-
-
-
-
-
-
-${tax}=   Convert To String   ${auction.value.valueAddedTaxIncluded}
-${tax}=   Convert To Lowercase  ${tax}
+  dzo.Пошук лоту по ідентифікатору  ${username}  ${tender_uaid}
