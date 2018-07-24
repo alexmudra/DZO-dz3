@@ -393,7 +393,48 @@ Login
   [Arguments]  ${username}  ${tender_uaid}  ${field}
   ${value}=  run keyword if  '${field}' == 'lotID'  Get Text  xpath=//td[contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
   ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(@class,"statusItem active")]/descendant::div[contains(@class,"statusName")][last()]
+  ...  ELSE IF  'assetCustodian.identifier.legalName' in '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[1]/following-sibling::td[1]/descendant::span
+  ...  ELSE IF  'date' == '${field}'  Get Element Attribute  xpath=//*[@data-test-date]@data-test-datemodified
+  ...  ELSE IF  'rectificationPeriod.endDate' in '${field}'  Get Element Attribute  xpath=//*[@data-test-rectificationperiod-enddate]@data-test-rectificationperiod-enddate
+  ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(@class,"statusItem active")]/descendant::div[contains(@class,"statusName")][last()]       #pass
+  ...  ELSE IF  'title' == '${field}'  Get Text  xpath=//div/h1                                                                                                  #pass
+  ...  ELSE IF  'decision' in '${field}'  Отримати інформацію про lotDecisions  decisions  ${field}
+  ...  ELSE IF  'description' == '${field}'  Get Text  xpath=//h2[@class="tenderDescr"]                                                                          #pass
+  ...  ELSE IF  'lotHolder.name' == '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[2]/following-sibling::td[1]         #pass
+
+  ...  ELSE IF  'lotHolder.identifier.scheme' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[1]/following-sibling::td/span[1]     #pass
+  ...  ELSE IF  'lotCustodian.identifier.scheme' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[2]/following-sibling::td/span[1]  #pass
+
+
+  ...  ELSE IF  'lotHolder.identifier.id' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[2]/following-sibling::td/span[2]         #pass
+  ...  ELSE IF  'lotCustodian.identifier.id' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[1]/following-sibling::td/span[2]
+
+
+  ...  ELSE IF  'lotCustodian.identifier.legalName' == '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[2]/following-sibling::td[1]
+  ...  ELSE IF  'lotCustodian.identifier.legalName' == '${field}'  Get Text  xpath=(//td[contains(text(), "Юридична адреса")])[1]/following-sibling::td[1]
+
+
+
+
+
+  ...  ELSE IF  'lotCustodian.contactPoint.name' == '${field}'  Get Text  xpath=(//td[contains(text(), "Ім'я")])[1]/following-sibling::td[1]
+  ...  ELSE IF  'lotCustodian.contactPoint.telephone' == '${field}'  Get Text  xpath=(//td[contains(text(), "Телефон")])[1]/following-sibling::td[1]
+  ...  ELSE IF  'lotCustodian.contactPoint.email' == '${field}'  Get Text  xpath=(//td[contains(text(),"E-mail")])[1]/following-sibling::td[1]
+  ...  ELSE IF  'documents[0].documentType' == '${field}'  Get Text  xpath=//a[contains(@href, "info/ss")]/following-sibling::div/span
+  ...  ELSE IF  'dateModified' == '${field}'  Get Element Attribute  xpath=//*[@data-test-date]@data-test-datemodified
   ${value}=  adapt_asset_data  ${field}  ${value}
+  [Return]  ${value}
+
+
+
+Отримати інформацію про lotDecisions
+  [Arguments]  ${field}
+  ${index}=  Set Variable  ${field.split('[')[1].split(']')[0]}
+  ${index}=  Convert To Integer  ${index}
+  ${value}=  Run Keyword If  'title' in '${field}'  Get Text  xpath=//h3[@class="title"][contains(text(), "Рішення про затвердження умов продажу / Рішення про затвердження переліку об'єктів, або про включення нового об'єкта до переліку")]/../descendant::td[@class="itemNum"]/span[contains(text(), "${index + 1}")]/../following-sibling::td/div[1]
+  ...  ELSE IF  'decisionDate' in '${field}'  Get Text  xpath=//h3[@class="title"][contains(text(), "Рішення про затвердження умов продажу / Рішення про затвердження переліку об'єктів, або про включення нового об'єкта до переліку")]/../descendant::td[@class="itemNum"]/span[contains(text(), "${index + 1}")]/../following-sibling::td/div[2]/span[3]
+  ...  ELSE IF  'decisionID' in '${field}'  Get Text  xpath=//h3[@class="title"][contains(text(), "Рішення про затвердження умов продажу / Рішення про затвердження переліку об'єктів, або про включення нового об'єкта до переліку")]/../descendant::td[@class="itemNum"]/span[contains(text(), "${index + 1}")]/../following-sibling::td/div[2]/span[1]
+  ${value}=  convert_decision_data  ${value}  ${field}
   [Return]  ${value}
 
 
@@ -426,6 +467,14 @@ Login
   Click Element  xpath=//div/a[@class="jBtn green"]
   Wait Until Element Is Visible  xpath=//div[contains(text(),"Скасування в процесі")]
   Reload Page
+
+
+
+
+
+
+
+
 
 
 Scroll And Click Element
