@@ -391,30 +391,29 @@ Login
 
 Отримати інформацію із лоту
   [Arguments]  ${username}  ${tender_uaid}  ${field}
-  ${value}=  Run Keyword If  '${field}' == 'lotID'  Get Text  xpath=//td[contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
-  ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(@class,"statusItem active")]/descendant::div[contains(@class,"statusName")][last()]
+  ${value}=  Run Keyword If  '${field}' == 'lotID'                   Get Text  xpath=//td[contains(text(),"Ідентифікатор Інформаційного повідомлення")]/following-sibling::td[1]/a/span
+  ...  ELSE IF  'status' == '${field}'                               Get Text  xpath=//div[contains(@class,"statusItem active")]/descendant::div[contains(@class,"statusName")][last()]
   ...  ELSE IF  'assetCustodian.identifier.legalName' in '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[1]/following-sibling::td[1]/descendant::span
-  ...  ELSE IF  'date' == '${field}'  Get Element Attribute  xpath=//*[@data-test-date]@data-test-datemodified
+  ...  ELSE IF  'date' == '${field}'                                 Get Element Attribute  xpath=//*[@data-test-date]@data-test-date
+  ...  ELSE IF  'rectificationPeriod.endDate' in '${field}'          Get Element Attribute  xpath=//*[@data-test-rectificationperiod-enddate]@data-test-rectificationperiod-enddate
+  ...  ELSE IF  'title' == '${field}'                                Get Text  xpath=//div/h1
 
-  ...  ELSE IF  'rectificationPeriod.endDate' in '${field}'  Get Element Attribute  xpath=//*[@data-test-rectificationperiod-enddate]@data-test-rectificationperiod-enddate
-  ...  ELSE IF  'status' == '${field}'  Get Text  xpath=//div[contains(@class,"statusItem active")]/descendant::div[contains(@class,"statusName")][last()]
-  ...  ELSE IF  'title' == '${field}'  Get Text  xpath=//div/h1
-  ...  ELSE IF  'description' == '${field}'  Get Text  xpath=//h2[@class="tenderDescr"]
-  ...  ELSE IF  'lotHolder.name' == '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[2]/following-sibling::td[1]
+#lotholder балансоутримувач
 
-  ...  ELSE IF  'lotHolder.identifier.scheme' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[1]/following-sibling::td/span[1]
-  ...  ELSE IF  'lotCustodian.identifier.scheme' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[2]/following-sibling::td/span[1]
+  ...  ELSE IF  'lotHolder.name' == '${field}'                       Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[2]/following-sibling::td[1]
+  ...  ELSE IF  'lotHolder.identifier.scheme' == '${field}'          Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[2]/following-sibling::td/span[1]
+  ...  ELSE IF  'lotHolder.identifier.id' == '${field}'              Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[2]/following-sibling::td/span[2]
 
+#lotcustodian розпорядник
 
-  ...  ELSE IF  'lotHolder.identifier.id' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[2]/following-sibling::td/span[2]
-  ...  ELSE IF  'lotCustodian.identifier.id' == '${field}'  Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[1]/following-sibling::td/span[2]
+  ...  ELSE IF  'lotCustodian.identifier.scheme' == '${field}'       Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[1]/following-sibling::td/span[1]
+  ...  ELSE IF  'lotCustodian.identifier.id' == '${field}'           Get Text  xpath=(//td[contains(text(), "Код в ЄДРПОУ / ІПН")])[1]/following-sibling::td/span[2]
+  ...  ELSE IF  'lotCustodian.identifier.legalName' == '${field}'    Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[1]/following-sibling::td[1]
+  ...  ELSE IF  'lotCustodian.contactPoint.name' == '${field}'       Get Text  xpath=(//td[contains(text(), "Ім'я")])[1]/following-sibling::td[1]
+  ...  ELSE IF  'lotCustodian.contactPoint.telephone' == '${field}'  Get Text  xpath=(//td[contains(text(), "Телефон")])[1]/following-sibling::td[1]
+  ...  ELSE IF  'lotCustodian.contactPoint.email' == '${field}'      Get Text  xpath=(//td[contains(text(),"E-mail")])[1]/following-sibling::td[1]
+#  ...  ELSE IF  'dateModified' == '${field}'                         Get Element Attribute  xpath=//*[@data-test-date]@data-test-datemodified
 
-  ...  ELSE IF  'lotCustodian.identifier.legalName' == '${field}'  Get Text  xpath=(//td[contains(text(), "Найменування Органу приватизації")])[1]/following-sibling::td[1]
-
-  ...  ELSE IF  'lotCustodian.contactPoint.name' == '${field}'  Get Text  xpath=(//td[contains(text(), "Ім'я")])[1]/following-sibling::td[1] #+
-  ...  ELSE IF  'lotCustodian.contactPoint.telephone' == '${field}'  Get Text  xpath=(//td[contains(text(), "Телефон")])[1]/following-sibling::td[1] #+
-  ...  ELSE IF  'lotCustodian.contactPoint.email' == '${field}'  Get Text  xpath=(//td[contains(text(),"E-mail")])[1]/following-sibling::td[1] #+
-  ...  ELSE IF  'dateModified' == '${field}'  Get Element Attribute  xpath=//*[@data-test-date]@data-test-datemodified
   ${value}=  adapt_asset_data  ${field}  ${value}
   [Return]  ${value}
 
@@ -422,26 +421,22 @@ Login
 Отримати інформацію зі складу інформаційного повідомлення
   [Arguments]  ${username}  ${tender_uaid}  ${item_id}  ${field_name}
   ${item_value}=  Run Keyword If  'classification.scheme' in "${field_name}"  Get Element Attribute  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/./following-sibling::div[1]/span[1]@data-classification-scheme
-  ...  ELSE IF  'description' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]                                                     # локатор перевірив
+  ...  ELSE IF  'description' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]
   ...  ELSE IF  'classification.id' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/./following-sibling::div[1]/span[2]
-  ...  ELSE IF  'unit.name' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/../following-sibling::td/span[2]
   ...  ELSE IF  'quantity' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/../following-sibling::td/span[1]
+  ...  ELSE IF  'unit.name' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/../following-sibling::td/span[2]
   ...  ELSE IF  'registrationDetails.status' == '${field_name}'  Get Text  xpath=//div[@class="itemDescr"][contains(text(), "${item_id}")]/following-sibling::div[4]/span[1]
   ${item_value}=   adapt_items_data   ${field_name}   ${item_value}
   [Return]  ${item_value}
-
-
-
-
 
 
 Отримати інформацію про lotDecisions
   [Arguments]  ${field}
   ${index}=  Set Variable  ${field.split('[')[1].split(']')[0]}
   ${index}=  Convert To Integer  ${index}
-  ${value}=  Run Keyword If  'title' in '${field}'  Get Text  xpath=//h3[@class="title"][contains(text(), "Рішення про затвердження умов продажу / Рішення про затвердження переліку об'єктів, або про включення нового об'єкта до переліку")]/../descendant::td[@class="itemNum"]/span[contains(text(), "${index + 1}")]/../following-sibling::td/div[1]
-  ...  ELSE IF  'decisionDate' in '${field}'  Get Text  xpath=//h3[@class="title"][contains(text(), "Рішення про затвердження умов продажу / Рішення про затвердження переліку об'єктів, або про включення нового об'єкта до переліку")]/../descendant::td[@class="itemNum"]/span[contains(text(), "${index + 1}")]/../following-sibling::td/div[2]/span[3]
-  ...  ELSE IF  'decisionID' in '${field}'  Get Text  xpath=//h3[@class="title"][contains(text(), "Рішення про затвердження умов продажу / Рішення про затвердження переліку об'єктів, або про включення нового об'єкта до переліку")]/../descendant::td[@class="itemNum"]/span[contains(text(), "${index + 1}")]/../following-sibling::td/div[2]/span[1]
+  ${value}=  Run Keyword If  'title' in '${field}'  Get Text  xpath=//h3[@class="title"][contains(text(), "Рішення про затвердження умов продажу")]/../descendant::td[@class="itemNum"]/span[contains(text(), "${index + 1}")]/../following-sibling::td/div[1]
+  ...  ELSE IF  'decisionDate' in '${field}'  Get Text  xpath=(//h3[@class="title"][contains(text(), "Рішення про затвердження умов продажу")]/following-sibling::div/descendant::span[contains(text(), "від")])[${index + 1}]/following-sibling::span
+  ...  ELSE IF  'decisionID' in '${field}'  Get Text  xpath=(//h3[@class="title"][contains(text(), "Рішення про затвердження умов продажу")]/following-sibling::div/descendant::span[contains(text(), "від")])[${index + 1}]/preceding-sibling::span
   ${value}=  convert_decision_data  ${value}  ${field}
   [Return]  ${value}
 
